@@ -19,7 +19,7 @@ import { cn } from "../utils";
 import * as api from "../lib/tauri";
 import type { QuickCommand, ExecutionResult } from "../lib/tauri";
 import { open } from "@tauri-apps/plugin-dialog";
-import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, type DropResult, type DraggableProvided } from "@hello-pangea/dnd";
 
 // ── CommandCard ──
 
@@ -42,11 +42,7 @@ function CommandCard({
   onExecute: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  dragProvided: {
-    innerRef: (el: HTMLElement | null) => void;
-    draggableProps: Record<string, unknown>;
-    dragHandleProps: Record<string, unknown> | null;
-  };
+  dragProvided: DraggableProvided;
 }) {
   const { t } = useTranslation();
   const typeIcon = cmd.type === "shell" ? Terminal : FileCode;

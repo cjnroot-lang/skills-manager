@@ -14,6 +14,7 @@ import {
   Link2,
   Terminal,
   Play,
+  FileCode,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -461,9 +462,7 @@ export function Sidebar() {
           {quickCommands.length > 0 ? (
             <div className="space-y-0.5">
               {quickCommands.slice(0, 8).map((cmd) => {
-                const cmdIcon = cmd.type === "shell" ? Terminal : FileCode;
-                const CmdIcon = cmdIcon;
-                const isActive = location.pathname === "/quick-commands";
+                const CmdIcon = cmd.type === "shell" ? Terminal : FileCode;
                 return (
                   <button
                     key={cmd.id}
