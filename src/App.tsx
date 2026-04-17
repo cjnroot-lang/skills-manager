@@ -10,6 +10,7 @@ import { MySkills } from "./views/MySkills";
 import { InstallSkills } from "./views/InstallSkills";
 import { Settings } from "./views/Settings";
 import { ProjectDetail } from "./views/ProjectDetail";
+import { QuickCommands } from "./views/QuickCommands";
 
 function ThemedToaster() {
   const { resolvedTheme } = useThemeContext();
@@ -40,6 +41,7 @@ function App() {
               <Route path="/install" element={<InstallSkills />} />
               <Route path="/project/:id" element={<ProjectDetail />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/quick-commands" element={<QuickCommands />} />
             </Route>
           </Routes>
           <HelpDialog />

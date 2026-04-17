@@ -12,6 +12,8 @@ import {
   FolderOpen,
   GripVertical,
   Link2,
+  Terminal,
+  Play,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -22,7 +24,7 @@ import { RenameScenarioDialog } from "./RenameScenarioDialog";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { ConfirmDialog } from "./ConfirmDialog";
 import * as api from "../lib/tauri";
-import type { SyncHealth } from "../lib/tauri";
+import type { SyncHealth, QuickCommand } from "../lib/tauri";
 import { getScenarioIconOption } from "../lib/scenarioIcons";
 
 function getSyncHealthIndicator(health: SyncHealth, skillCount: number): { color: string; title: string } | null {
@@ -51,11 +53,16 @@ export function Sidebar() {
   const [deleteProjectTarget, setDeleteProjectTarget] = useState<{ id: string; name: string } | null>(null);
   const [orderedScenarios, setOrderedScenarios] = useState(scenarios);
   const [orderedProjects, setOrderedProjects] = useState(projects);
+  const [quickCommands, setQuickCommands] = useState<QuickCommand[]>([]);
   const scenarioReorderQueueRef = useRef<Promise<void>>(Promise.resolve());
   const projectReorderQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => { setOrderedScenarios(scenarios); }, [scenarios]);
   useEffect(() => { setOrderedProjects(projects); }, [projects]);
+
+  useEffect(() => {
+    api.getQuickCommands().then(setQuickCommands).catch(() => {});
+  }, [location.pathname]);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || result.destination.index === result.source.index) return;
@@ -434,6 +441,64 @@ export function Sidebar() {
             <Plus className="w-3.5 h-3.5" />
             {t("sidebar.addProject")}
           </button>
+
+          {/* Divider */}
+          <div className="mx-0.5 mt-3.5 mb-2.5 border-t border-border-subtle" />
+
+          {/* Quick Commands */}
+          <div className="mb-1.5 px-2.5 flex items-center justify-between">
+            <span className="block truncate text-[12px] font-semibold tracking-[0.01em] text-muted whitespace-nowrap">
+              {t("sidebar.quickCommands")}
+            </span>
+            <Link
+              to="/quick-commands"
+              className="text-[11px] text-faint hover:text-accent transition-colors"
+              title={t("sidebar.manageQuickCommands")}
+            >
+              <Pencil className="w-3 h-3" />
+            </Link>
+          </div>
+          {quickCommands.length > 0 ? (
+            <div className="space-y-0.5">
+              {quickCommands.slice(0, 8).map((cmd) => {
+                const cmdIcon = cmd.type === "shell" ? Terminal : FileCode;
+                const CmdIcon = cmdIcon;
+                const isActive = location.pathname === "/quick-commands";
+                return (
+                  <button
+                    key={cmd.id}
+                    onClick={async () => {
+                      try {
+                        const result = await api.executeQuickCommand(cmd.id);
+                        if (result.exit_code === 0) {
+                          toast.success(t("quickCommands.execSuccess", { name: cmd.name }));
+                        } else {
+                          toast.error(t("quickCommands.execFailed", { name: cmd.name, code: result.exit_code }));
+                        }
+                      } catch {
+                        toast.error(t("quickCommands.execError", { name: cmd.name }));
+                      }
+                    }}
+                    className={cn(
+                      "group/cmd flex w-full items-center gap-2 px-2.5 py-[6px] rounded-[5px] text-[13px] transition-colors outline-none text-tertiary hover:text-secondary hover:bg-surface-hover"
+                    )}
+                  >
+                    <CmdIcon className="w-3.5 h-3.5 shrink-0 text-muted group-hover/cmd:text-accent transition-colors" />
+                    <span className="flex-1 truncate text-left">{cmd.name}</span>
+                    <Play className="w-3 h-3 shrink-0 text-faint opacity-0 group-hover/cmd:opacity-100 transition-opacity" />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <Link
+              to="/quick-commands"
+              className="flex items-center gap-2 px-2.5 py-[7px] rounded-[5px] text-[13px] text-muted hover:text-secondary hover:bg-surface-hover transition-colors outline-none"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t("sidebar.addQuickCommand")}
+            </Link>
+          )}
         </div>
 
         {/* Settings */}

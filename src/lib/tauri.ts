@@ -517,3 +517,87 @@ export const deleteProjectSkill = (projectId: string, skillRelativePath: string,
 
 export const slugifySkillNames = (names: string[]) =>
   invoke<string[]>("slugify_skill_names", { names });
+
+// ── Quick Commands ──
+
+export interface QuickCommand {
+  id: string;
+  name: string;
+  type: "shell" | "script";
+  command: string | null;
+  script_ext: string | null;
+  script_content: string | null;
+  script_path: string | null;
+  working_dir: string | null;
+  env_vars: string | null;
+  icon: string | null;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ExecutionResult {
+  exit_code: number;
+  stdout: string;
+  stderr: string;
+}
+
+export const getQuickCommands = () =>
+  invoke<QuickCommand[]>("get_quick_commands");
+
+export const createQuickCommand = (
+  name: string,
+  type: string,
+  command?: string | null,
+  scriptExt?: string | null,
+  scriptContent?: string | null,
+  scriptPath?: string | null,
+  workingDir?: string | null,
+  envVars?: string | null,
+  icon?: string | null,
+) =>
+  invoke<QuickCommand>("create_quick_command", {
+    name,
+    type,
+    command: command ?? null,
+    scriptExt: scriptExt ?? null,
+    scriptContent: scriptContent ?? null,
+    scriptPath: scriptPath ?? null,
+    workingDir: workingDir ?? null,
+    envVars: envVars ?? null,
+    icon: icon ?? null,
+  });
+
+export const updateQuickCommand = (
+  id: string,
+  name: string,
+  type: string,
+  command?: string | null,
+  scriptExt?: string | null,
+  scriptContent?: string | null,
+  scriptPath?: string | null,
+  workingDir?: string | null,
+  envVars?: string | null,
+  icon?: string | null,
+) =>
+  invoke<void>("update_quick_command", {
+    id,
+    name,
+    type,
+    command: command ?? null,
+    scriptExt: scriptExt ?? null,
+    scriptContent: scriptContent ?? null,
+    scriptPath: scriptPath ?? null,
+    workingDir: workingDir ?? null,
+    envVars: envVars ?? null,
+    icon: icon ?? null,
+  });
+
+export const deleteQuickCommand = (id: string) =>
+  invoke<void>("delete_quick_command", { id });
+
+export const reorderQuickCommands = (ids: string[]) =>
+  invoke<void>("reorder_quick_commands", { ids });
+
+export const executeQuickCommand = (id: string) =>
+  invoke<ExecutionResult>("execute_quick_command", { id });

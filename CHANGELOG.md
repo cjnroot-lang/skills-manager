@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-04-17
+
+### Added
+- Quick Commands page: manage and execute common shell commands and scripts (sh/py/js) with drag-and-drop reordering, inline or external script file support, working directory configuration, and execution output panel
+- Sidebar Quick Commands section: quick-execute commands directly from the sidebar without navigating to the full page
+- i18n support for Quick Commands feature (zh, en, zh-TW)
+
+### Changed
+- Shell command execution now uses interactive login shell (`$SHELL -i -l -c`) to ensure user PATH and shell profiles are properly loaded in GUI app context
+
 ## [1.13.3] - 2026-04-11
 
 ### Changed

@@ -94,6 +94,23 @@ pub struct ScenarioSkillToolToggleRecord {
     pub updated_at: i64,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct QuickCommandRecord {
+    pub id: String,
+    pub name: String,
+    pub r#type: String,
+    pub command: Option<String>,
+    pub script_ext: Option<String>,
+    pub script_content: Option<String>,
+    pub script_path: Option<String>,
+    pub working_dir: Option<String>,
+    pub env_vars: Option<String>,
+    pub icon: Option<String>,
+    pub sort_order: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
 impl SkillStore {
     pub fn new(db_path: &PathBuf) -> Result<Self> {
         let conn = Connection::open(db_path)?;
@@ -1018,6 +1035,97 @@ impl SkillStore {
         }
         Ok(map)
     }
+
+    // ── Quick Commands ──
+
+    pub fn insert_quick_command(&self, cmd: &QuickCommandRecord) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT INTO quick_commands (id, name, type, command, script_ext, script_content, script_path, working_dir, env_vars, icon, sort_order, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            params![
+                cmd.id,
+                cmd.name,
+                cmd.r#type,
+                cmd.command,
+                cmd.script_ext,
+                cmd.script_content,
+                cmd.script_path,
+                cmd.working_dir,
+                cmd.env_vars,
+                cmd.icon,
+                cmd.sort_order,
+                cmd.created_at,
+                cmd.updated_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_all_quick_commands(&self) -> Result<Vec<QuickCommandRecord>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, type, command, script_ext, script_content, script_path, working_dir, env_vars, icon, sort_order, created_at, updated_at
+             FROM quick_commands ORDER BY sort_order, created_at",
+        )?;
+        let rows = stmt.query_map([], map_quick_command_row)?;
+        Ok(rows.filter_map(|r| r.ok()).collect())
+    }
+
+    pub fn get_quick_command_by_id(&self, id: &str) -> Result<Option<QuickCommandRecord>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, type, command, script_ext, script_content, script_path, working_dir, env_vars, icon, sort_order, created_at, updated_at
+             FROM quick_commands WHERE id = ?1",
+        )?;
+        let mut rows = stmt.query_map(params![id], map_quick_command_row)?;
+        Ok(rows.next().and_then(|r| r.ok()))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn update_quick_command(
+        &self,
+        id: &str,
+        name: &str,
+        r#type: &str,
+        command: Option<&str>,
+        script_ext: Option<&str>,
+        script_content: Option<&str>,
+        script_path: Option<&str>,
+        working_dir: Option<&str>,
+        env_vars: Option<&str>,
+        icon: Option<&str>,
+    ) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let now = chrono::Utc::now().timestamp_millis();
+        conn.execute(
+            "UPDATE quick_commands
+             SET name = ?1, type = ?2, command = ?3, script_ext = ?4, script_content = ?5,
+                 script_path = ?6, working_dir = ?7, env_vars = ?8, icon = ?9, updated_at = ?10
+             WHERE id = ?11",
+            params![name, r#type, command, script_ext, script_content, script_path, working_dir, env_vars, icon, now, id],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_quick_command(&self, id: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM quick_commands WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn reorder_quick_commands(&self, ids: &[String]) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let tx = conn.unchecked_transaction()?;
+        for (i, id) in ids.iter().enumerate() {
+            tx.execute(
+                "UPDATE quick_commands SET sort_order = ?1 WHERE id = ?2",
+                params![i as i32, id],
+            )?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
 }
 
 fn map_skill_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SkillRecord> {
@@ -1041,5 +1149,23 @@ fn map_skill_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SkillRecord> {
         update_status: row.get(16)?,
         last_checked_at: row.get(17)?,
         last_check_error: row.get(18)?,
+    })
+}
+
+fn map_quick_command_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<QuickCommandRecord> {
+    Ok(QuickCommandRecord {
+        id: row.get(0)?,
+        name: row.get(1)?,
+        r#type: row.get(2)?,
+        command: row.get(3)?,
+        script_ext: row.get(4)?,
+        script_content: row.get(5)?,
+        script_path: row.get(6)?,
+        working_dir: row.get(7)?,
+        env_vars: row.get(8)?,
+        icon: row.get(9)?,
+        sort_order: row.get(10)?,
+        created_at: row.get(11)?,
+        updated_at: row.get(12)?,
     })
 }

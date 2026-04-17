@@ -481,6 +481,13 @@ pub fn run() {
             commands::projects::reorder_projects,
             commands::scenarios::get_scenario_skill_order,
             commands::scenarios::reorder_scenario_skills,
+            // Quick Commands
+            commands::quick_commands::get_quick_commands,
+            commands::quick_commands::create_quick_command,
+            commands::quick_commands::update_quick_command,
+            commands::quick_commands::delete_quick_command,
+            commands::quick_commands::reorder_quick_commands,
+            commands::quick_commands::execute_quick_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
